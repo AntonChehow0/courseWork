@@ -11,12 +11,13 @@ class PipeWorker():
         with open(FIFO, "rb") as fifo:
             while True:
                 data = fifo.read()
-                resultString += data.decode("UTF-8", "ignore")
+                resultString += data.decode("ascii", "ignore")
                 if len(data) == 0:
                     print("LOG: Reader closed")
                     break
 
         resultString.rstrip()
+        resultString.replace("\n", "")
         print("LOG: Прочитанно =" + str(len(resultString)))
         print(resultString)
         print("end read")

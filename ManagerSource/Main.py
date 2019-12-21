@@ -46,17 +46,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.InitList()
 
     def AddToUi(self, usrData):
-        myQCustomQWidget = QCustomQWidget()
-        myQCustomQWidget.SetPidValue("123")
-        myQCustomQWidget.SetStatus("Normal")
-        myQListWidgetItem = QListWidgetItem(self.listWidget)
-        # Set size hint
-        self.listWidget.setFixedHeight(500)
-        self.listWidget.setFixedWidth(950)
-        myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
-        # Add QListWidgetItem into QListWidget
-        self.listWidget.addItem(myQListWidgetItem)
-        self.listWidget.setItemWidget(myQListWidgetItem, myQCustomQWidget)
+        for i in usrData:
+            myQCustomQWidget = QCustomQWidget()
+            print("PID added  = ", i.USER.PID)
+            myQCustomQWidget.SetPidValue(i.USER.PID)
+            myQCustomQWidget.SetStatus(i.USER.STATUS)
+            myQListWidgetItem = QListWidgetItem(self.listWidget)
+            # Set size hint
+            self.listWidget.setFixedHeight(500)
+            self.listWidget.setFixedWidth(950)
+            myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
+            # Add QListWidgetItem into QListWidget
+            self.listWidget.addItem(myQListWidgetItem)
+            self.listWidget.setItemWidget(myQListWidgetItem, myQCustomQWidget)
 
     def AddToDictonary(self):
         readedString = self._pipeworker.ReadPipe(self.MainPipePath)
@@ -97,7 +99,7 @@ class MainWindow(QtWidgets.QMainWindow):
         print("signaled!\n")
         readedString = self._pipeworker.ReadPipe(os.getcwd() + "/" + self.PipeName)
         usrs = self._converter.ParseToMessage(readedString)
-        self.AddToUi("das")
+        self.AddToUi(usrs)
 
 
 def main():

@@ -1,3 +1,7 @@
+from ManagerSource.Message import Message
+from ManagerSource.User import User
+
+
 class MessageConverter():
 
     def __init__(self):
@@ -7,13 +11,26 @@ class MessageConverter():
         return int(stringMessage.split(':')[0])
 
     def ParseToMessage(self, stringMess):
-        if (stringMess == ""):
+        if stringMess == "":
             print("Can't parse string")
             return
+
         allMessages = stringMess.split(".")
-        usrList = []
-        res = []
+        print(allMessages)
+        msgList = []
+
         for message in allMessages:
+            if message == "":
+                continue
+            res = []
             for j in message.split(","):
-                print(j)
-                res = j.split(":")[1]
+                if j == "":
+                    continue
+                res.append(str(j.split(":")[1]))
+            print(res)
+            msg = Message(User(res[3], res[1], res[2]), res[0], res[4])
+            print(msg.USER.PID)
+            msgList.append(msg)
+
+        print("Count of element in lists = ", len(msgList))
+        return msgList

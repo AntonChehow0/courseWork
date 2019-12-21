@@ -4,9 +4,8 @@ class User():
     STATUS = ""
     MSG = ""
 
-    def __init__(self, name, pid, status, msg):
+    def __init__(self, name, pid, status):
         self.Name = name
         self.PID = pid
         self.STATUS = status
-        self.MSG = msg
         pass
