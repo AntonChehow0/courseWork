@@ -1,6 +1,5 @@
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QVBoxLayout, QLabel, QHBoxLayout, QWidget
-from PyQt5.uic.properties import QtGui, QtWidgets
 
 
 class QCustomQWidget(QWidget):
@@ -21,7 +20,7 @@ class QCustomQWidget(QWidget):
         self.secondColumn.addWidget(self.textQlabeleStatusValue)
 
         self.firstColumn.setContentsMargins(1, 0, 30, 0)
-        self.secondColumn.setContentsMargins(30, 0, 15, 0)
+        self.secondColumn.setContentsMargins(0, 0, 15, 0)
 
         self.allQHBoxLayout = QHBoxLayout()
 
