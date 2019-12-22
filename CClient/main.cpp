@@ -55,6 +55,7 @@ void ChooseTypeMsg(vector<string> msgData) {
         return;
     }
     int type = stoi(msgType);
+    cout << "\n msg type is" << type << "\n";
     switch (type){
         case 1:
             SetNewName(msgData);
@@ -64,6 +65,7 @@ void ChooseTypeMsg(vector<string> msgData) {
             break;
         case 3:
             ExecuteCommand(msgData);
+            break;
         default:
             cout<<"\nCLIENT_LOG: ERROR unavailable type msg \n";
     }
@@ -92,7 +94,7 @@ void SetNewName(vector<string> vector) {
 
 void SignalQuitHandler(int n){
 
-    cout<<"\nWork with SIGQUIt";
+    cout << "\nWork with SIGINT";
     kill(Ppid, SIGUSR2);
     int fdGeneralPipeName = open(generalPipeName.c_str(), O_WRONLY );
     if(fdGeneralPipeName<0){
@@ -137,11 +139,18 @@ int main(int argc, char *argv[]) {
 }
 
 void InitSignals() {
-    struct sigaction act,outI;
+    struct sigaction act, outI;
     act.sa_handler = SignalQuitHandler;
     sigemptyset(&act.sa_mask);
     act.sa_flags = SA_NODEFER;
-    sigaction(SIGKILL, &act, &outI);
+    sigaction(SIGINT, &act, &outI);
+
+    struct sigaction act2, outI1;
+    act.sa_handler = SignalQuitHandler;
+    sigemptyset(&act2.sa_mask);
+    act.sa_flags = SA_NODEFER;
+    sigaction(SIGQUIT, &act2, &outI1);
+
 
     struct sigaction sa;
     sigemptyset(&sa.sa_mask);
