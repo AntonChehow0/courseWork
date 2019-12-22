@@ -24,7 +24,7 @@ class SendMsgDialog(QWidget):
         self.labelComand = QLabel()
         self.labelComand.setFont(font)
         self.labelComand.setAlignment(Qt.AlignCenter)
-        self.labelComand.setText("Команда")
+        self.labelComand.setText("Данные сообщения")
 
         self.lineEdit = QLineEdit(self)
         self.lineEditComand = QLineEdit(self)

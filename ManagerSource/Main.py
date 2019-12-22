@@ -53,8 +53,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dealog = SendMsgDialog(self.CallBackSendMsgHandlet)
         self.dealog.show()
 
+    def TryDistinctData(self, PID):
+        for key, value in self.dictUsers.items():
+            if value.PID == PID:
+                self.listWidget.takeItem(key)
+
     def AddToUi(self, usrData):
         for i in usrData:
+            self.TryDistinctData(i.USER.PID)
             self._listCounter += 1
             self.dictUsers[self._listCounter] = i.USER
             myQCustomQWidget = QCustomQWidget()
