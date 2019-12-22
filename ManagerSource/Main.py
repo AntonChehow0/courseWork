@@ -77,6 +77,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.listWidget.addItem(myQListWidgetItem)
             self.listWidget.setItemWidget(myQListWidgetItem, myQCustomQWidget)
 
+    def DeleteUserFromList(self, PID):
+        self.TryDistinctData(PID)
+        self._listCounter += 1
+
     def AddToDictonary(self):
         readedString = self._pipeworker.ReadPipe(self.MainPipePath)
         self._converter.ParseToMessage(readedString)
@@ -128,6 +132,12 @@ class MainWindow(QtWidgets.QMainWindow):
         usrs = self._converter.ParseToMessage(readedString)
         self.AddToUi(usrs)
 
+    def SigUserDieHandler(self, signum, stack):
+        readedString = self._pipeworker.ReadPipe(os.getcwd() + "/" + self.PipeName)
+        usrs = self._converter.ParseToMessage(readedString)
+        for usr in usrs:
+            self.DeleteUserFromList(usr.USER.PID)
+
 
 def main():
     os.chdir("..")
@@ -136,8 +146,9 @@ def main():
     app = QtWidgets.QApplication([])
     application = MainWindow()
     signal.signal(signal.SIGUSR1, application.SignalUser1Handler)  # USR1 - for read from general named pipe
+    signal.signal(signal.SIGUSR2, application.SigUserDieHandler)  # USR1 - for read from general named pipe
     timer = QTimer()
-    timer.start(1)
+    timer.start(100)
     timer.timeout.connect(lambda: None)
     application.show()
     sys.exit(app.exec())

@@ -30,6 +30,8 @@ void SetNewName(vector<string> vector);
 
 void SetStatus(vector<string> vector);
 
+void ExecuteCommand(vector<string> vector);
+
 void HandleUserSignal(int n){
     cout.flush();
     cout.clear();
@@ -60,25 +62,48 @@ void ChooseTypeMsg(vector<string> msgData) {
         case 2:
             SetStatus(msgData);
             break;
+        case 3:
+            ExecuteCommand(msgData);
         default:
             cout<<"\nCLIENT_LOG: ERROR unavailable type msg \n";
     }
 
 }
 
-void SetStatus(vector<string> vector) {
+void ExecuteCommand(vector<string> vector) {
+    char lineSplitter = ':';
+    string command = splitStrings(vector[4], lineSplitter)[1];
+    cout<<"\n\n\n\nResult of system command :\n\n\n\n\n";
+    system(command.c_str());
+    cout<<"\n\n\n\n\n";
+}
 
+void SetStatus(vector<string> vector) {
+    char lineSplitter = ':';
+    string newName = splitStrings(vector[4], lineSplitter)[1];
+    userData.setStatus(newName);
 }
 
 void SetNewName(vector<string> vector) {
-    char lineSpliter = ':';
-    string newName = splitStrings(vector[4],lineSpliter)[1];
+    char lineSplitter = ':';
+    string newName = splitStrings(vector[4], lineSplitter)[1];
     userData.setName(newName);
 }
 
 void SignalQuitHandler(int n){
 
     cout<<"\nWork with SIGQUIt";
+    kill(Ppid, SIGUSR2);
+    int fdGeneralPipeName = open(generalPipeName.c_str(), O_WRONLY );
+    if(fdGeneralPipeName<0){
+        cout<<"\nLOG_CLIENT: ERROR HIRE\n";
+        perror("LOG: CAN'T write to pipe");
+        exit(0);
+    }
+
+    string formatingMes = "messageType:9,PID:"+ userData.getPid() +",status:"+ userData.getStatus()+",userName:"+userData.getName()+",msg:ps -e.";
+    int response = write(fdGeneralPipeName,formatingMes.c_str(), formatingMes.size());
+    close(fdGeneralPipeName);
     exit(0);
 }
 int main(int argc, char *argv[]) {
@@ -116,7 +141,7 @@ void InitSignals() {
     act.sa_handler = SignalQuitHandler;
     sigemptyset(&act.sa_mask);
     act.sa_flags = SA_NODEFER;
-    sigaction(9, &act, &outI);
+    sigaction(SIGKILL, &act, &outI);
 
     struct sigaction sa;
     sigemptyset(&sa.sa_mask);
@@ -128,7 +153,7 @@ void InitSignals() {
 void NotifyNotifyParent() {
     __pid_t parentPid = getppid();
     kill(Ppid, SIGUSR1);
-    cout<<"LOG_CLIENT :PArent PID is "<< parentPid<<endl;
+    cout<<"\nLOG_CLIENT :PArent PID is "<< parentPid<<endl;
     cout<< "\nLOG_CLIENT: start writing ..... \n";
     cout<<generalPipeName;
     int fdGeneralPipeName = open(generalPipeName.c_str(), O_WRONLY );
@@ -142,7 +167,7 @@ void NotifyNotifyParent() {
     int response = write(fdGeneralPipeName,formatingMes.c_str(), formatingMes.size());
     close(fdGeneralPipeName);
     cout<< "Writed = "<<response<<endl;
-    cout<<"LOG_CLIENT : Writed to Pipe";
+
     cout.flush();
 }
 
