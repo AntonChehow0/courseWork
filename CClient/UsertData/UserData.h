@@ -10,7 +10,7 @@
 using namespace  std;
 class UserData {
 private:
-    string PID;
+     string PID;
      string NAME;
      string STATUS;
 public:

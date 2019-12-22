@@ -1,6 +1,7 @@
 import os
 import signal
 import stat
+import subprocess
 import sys
 
 from PyQt5 import QtWidgets
@@ -12,6 +13,7 @@ from ManagerSource.PipeWorker import PipeWorker
 from UISource.PyUi.AddElementDialog import AddElementDialog
 from UISource.PyUi.CustemQListWidget.QCustomQWidget import QCustomQWidget
 from UISource.PyUi.MainForm import Ui_MainWindow
+from UISource.PyUi.SendMsgDialog import SendMsgDialog
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -20,9 +22,10 @@ class MainWindow(QtWidgets.QMainWindow):
     PidFile = "Pipe/PidFile.txt"
     PipeMode = 0o666
     pathToClientProgram = ""
-    dict = {}
+    dictUsers = {}
     _pipeworker = PipeWorker()
     _converter = MessageConverter()
+    _listCounter = 0
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -43,14 +46,22 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.ui.DelleteButton.clicked.connect(self.ButtonClicked)
         self.ui.addElementButton.clicked.connect(self.ButtonAddClicked)
+        self.ui.sendMessageButton.clicked.connect(self.ButtonMsgClkicked)
         self.InitList()
+
+    def ButtonMsgClkicked(self):
+        self.dealog = SendMsgDialog(self.CallBackSendMsgHandlet)
+        self.dealog.show()
 
     def AddToUi(self, usrData):
         for i in usrData:
+            self._listCounter += 1
+            self.dictUsers[self._listCounter] = i.USER
             myQCustomQWidget = QCustomQWidget()
             print("PID added  = ", i.USER.PID)
             myQCustomQWidget.SetPidValue(i.USER.PID)
             myQCustomQWidget.SetStatus(i.USER.STATUS)
+            myQCustomQWidget.SetName(i.USER.Name)
             myQListWidgetItem = QListWidgetItem(self.listWidget)
             # Set size hint
             self.listWidget.setFixedHeight(500)
@@ -65,37 +76,47 @@ class MainWindow(QtWidgets.QMainWindow):
         self._converter.ParseToMessage(readedString)
 
     def InitList(self):
-        myQCustomQWidget = QCustomQWidget()
-        myQCustomQWidget.SetPidValue("123")
-        myQCustomQWidget.SetStatus("Normal")
         myQListWidgetItem = QListWidgetItem(self.listWidget)
-        # Set size hint
         self.listWidget.setFixedHeight(500)
         self.listWidget.setFixedWidth(950)
-        myQListWidgetItem.setSizeHint(myQCustomQWidget.sizeHint())
-        # Add QListWidgetItem into QListWidget
         self.listWidget.addItem(myQListWidgetItem)
-        self.listWidget.setItemWidget(myQListWidgetItem, myQCustomQWidget)
-
-
 
     def ButtonClicked(self):
-        print(self.listWidget.SelectRows)
-        readedString = self._pipeworker.ReadPipe(os.getcwd() + "/" + self.PipeName)
-        print(readedString)
+        if self._listCounter == 0:
+            return
+        val = [x.row() for x in self.listWidget.selectedIndexes()]
+        listItems = self.listWidget.selectedItems()
+        if not listItems: return
+        for item in listItems:
+            self.listWidget.takeItem(self.listWidget.row(item))
+        self._listCounter -= 1
+        self.KillProcess(val[0])
+        print(val)
+
+    def KillProcess(self, index):
+        usrData = self.dictUsers[index]
+        os.kill(int(usrData.PID), 9)
 
     def ButtonAddClicked(self):
         self.dealog = AddElementDialog(self.CallBackHandler)
         self.dealog.show()
 
+    def CallBackSendMsgHandlet(self, strTypeMsg, strComand):
+        val = [x.row() for x in self.listWidget.selectedIndexes()]
+        usrData = self.dictUsers[val[0]]
+        os.kill(int(usrData.PID), signal.SIGUSR1)
+        self._pipeworker.WriteToPipe(self.PipeName,
+                                     "messageType:" + strTypeMsg + ",PID:" + usrData.PID + ",status:" + usrData.STATUS + ",userName:" + usrData.Name + ",msg:" + strComand)
+
     def CallBackHandler(self, str):
         print("call back recived" + str + "\n")
         self.pathToClientProgram = os.getcwd() + "/CClient/cmake-build-debug/CClient"  # "cmake-build-debug" + "/CClient &"
-        # subprocess.Popen([self.pathToClientProgram, '-c', 'd',])#API PYTHON для вызова processa
+        subprocess.Popen(
+            [self.pathToClientProgram, str, '1'])  # API PYTHON для вызова processa - системно вызывает exec
         # os.system(self.pathToClientProgram+" &")
-        os.execl(self.pathToClientProgram, "sa")
+        # os.execl(self.pathToClientProgram, "sa", "1", "1")
 
-    def SignalCatcher(self, signum, stack):
+    def SignalUser1Handler(self, signum, stack):
         print("signaled!\n")
         readedString = self._pipeworker.ReadPipe(os.getcwd() + "/" + self.PipeName)
         usrs = self._converter.ParseToMessage(readedString)
@@ -108,7 +129,7 @@ def main():
 
     app = QtWidgets.QApplication([])
     application = MainWindow()
-    signal.signal(signal.SIGUSR1, application.SignalCatcher)  # USR1 - for read from general named pipe
+    signal.signal(signal.SIGUSR1, application.SignalUser1Handler)  # USR1 - for read from general named pipe
     timer = QTimer()
     timer.start(1)
     timer.timeout.connect(lambda: None)

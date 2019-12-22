@@ -21,13 +21,10 @@ class PipeWorker():
         print("LOG: Прочитанно =" + str(len(resultString)))
         print(resultString)
         print("end read")
-
         return resultString
+
 
     def WriteToPipe(self, FIFO, writedString):
         ds = os.open(FIFO, os.O_WRONLY)
-        os.write(ds, writedString)
+        os.write(ds, writedString.encode())
         os.close(ds)
-        # ds = os.open(FIFO, os.O_WRONLY | os.O_CREAT)
-        # os.write(ds, writedString.encode())
-        # os.close(ds)
